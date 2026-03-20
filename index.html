@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICT24267 — Week 1–2 EC2 & RDS LAB Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --w1: #3b82f6;    /* Week 1 — electric blue */
+  --w1h: #60a5fa;
+  --w2: #a855f7;    /* Week 2 — violet */
+  --w2h: #c084fc;
+  --aws: #ff9900;
+  --green: #22c55e;
+  --yellow: #fbbf24;
+  --red: #ef4444;
+  --cyan: #06b6d4;
+  --bg: #080c18;
+  --bg2: #0e1424;
+  --bg3: #161d30;
+  --border: rgba(255,255,255,0.07);
+  --text: #e2e8f0;
+  --muted: #8899b4;
+  --font-th: 'IBM Plex Sans Thai', sans-serif;
+  --font-en: 'Space Grotesk', sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-th);background:var(--bg);color:var(--text);line-height:1.7;font-size:15px}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--w1);border-radius:3px}
+
+/* ─── HEADER ─── */
+.page-header{
+  background:linear-gradient(135deg,#050912 0%,#0a1628 50%,#060e20 100%);
+  border-bottom:1px solid var(--border);
+  padding:48px 24px 36px;text-align:center;position:relative;overflow:hidden;
+}
+.page-header::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 80% at 30% 0%,rgba(59,130,246,0.1) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 60% at 80% 100%,rgba(168,85,247,0.08) 0%,transparent 60%);
+  pointer-events:none;
+}
+.header-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);
+  color:var(--w1h);border-radius:99px;padding:4px 14px;
+  font-size:12px;font-weight:600;letter-spacing:0.05em;
+  font-family:var(--font-en);margin-bottom:16px;text-transform:uppercase;
+}
+.page-header h1{
+  font-family:var(--font-en);font-size:clamp(1.8rem,4vw,3rem);
+  font-weight:700;line-height:1.1;margin-bottom:8px;
+  background:linear-gradient(90deg,var(--w1h),#93c5fd,var(--w2h));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.page-header .subtitle{color:var(--muted);font-size:0.95rem;margin-bottom:28px}
+.project-tag{
+  display:inline-block;
+  background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(168,85,247,0.2));
+  border:1px solid rgba(255,255,255,0.1);
+  padding:10px 24px;border-radius:12px;font-size:1rem;font-weight:600;color:white;
+}
+
+/* ─── TABS ─── */
+.week-tabs{
+  position:sticky;top:0;z-index:100;
+  display:flex;background:rgba(8,12,24,0.95);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  padding:0 24px;overflow-x:auto;
+}
+.week-tab{
+  padding:14px 24px;border:none;background:none;
+  color:var(--muted);cursor:pointer;font-size:0.9rem;
+  font-family:var(--font-th);font-weight:500;
+  border-bottom:3px solid transparent;white-space:nowrap;
+  transition:all 0.2s;display:flex;align-items:center;gap:8px;
+}
+.week-tab:hover{color:var(--text)}
+.week-tab.active-w1{color:var(--w1h);border-color:var(--w1)}
+.week-tab.active-w2{color:var(--w2h);border-color:var(--w2)}
+
+/* ─── LAYOUT ─── */
+.main-layout{display:flex;min-height:calc(100vh - 120px)}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  padding:24px 0;position:sticky;top:57px;
+  height:calc(100vh - 57px);overflow-y:auto;
+}
+.sidebar-section{margin-bottom:8px}
+.sidebar-week{
+  padding:8px 20px 4px;font-size:11px;font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-en);
+}
+.sidebar-week.w1{color:var(--w1h)}
+.sidebar-week.w2{color:var(--w2h)}
+.sidebar a{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 20px;color:var(--muted);text-decoration:none;
+  font-size:13px;border-left:3px solid transparent;transition:all 0.15s;
+}
+.sidebar a:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+.sidebar a.w1-link:hover,.sidebar a.w1-active{color:var(--w1h);border-color:var(--w1);background:rgba(59,130,246,0.06)}
+.sidebar a.w2-link:hover,.sidebar a.w2-active{color:var(--w2h);border-color:var(--w2);background:rgba(168,85,247,0.06)}
+.sidebar-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sidebar-dot.w1{background:var(--w1)}
+.sidebar-dot.w2{background:var(--w2)}
+
+/* ─── CONTENT ─── */
+.content{flex:1;min-width:0;padding:40px 48px;max-width:900px}
+
+/* ─── WEEK HEADER ─── */
+.week-header{border-radius:20px;padding:32px 36px;margin-bottom:40px;position:relative;overflow:hidden}
+.week-header.w1{background:linear-gradient(135deg,rgba(59,130,246,0.15) 0%,rgba(59,130,246,0.04) 100%);border:1px solid rgba(59,130,246,0.25)}
+.week-header.w2{background:linear-gradient(135deg,rgba(168,85,247,0.15) 0%,rgba(168,85,247,0.04) 100%);border:1px solid rgba(168,85,247,0.25)}
+.week-header::before{content:attr(data-week);position:absolute;right:-10px;top:-20px;font-size:120px;font-weight:900;font-family:var(--font-en);opacity:0.05;line-height:1;pointer-events:none}
+.week-label{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;font-family:var(--font-en);margin-bottom:8px}
+.w1 .week-label{color:var(--w1h)}
+.w2 .week-label{color:var(--w2h)}
+.week-title{font-size:1.8rem;font-weight:700;color:white;line-height:1.2;margin-bottom:12px;font-family:var(--font-en)}
+.week-desc{color:var(--muted);font-size:0.95rem}
+.service-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pill{padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--font-en)}
+.pill-blue{background:rgba(59,130,246,0.15);color:var(--w1h);border:1px solid rgba(59,130,246,0.3)}
+.pill-violet{background:rgba(168,85,247,0.15);color:var(--w2h);border:1px solid rgba(168,85,247,0.3)}
+.pill-cyan{background:rgba(6,182,212,0.15);color:#67e8f9;border:1px solid rgba(6,182,212,0.3)}
+.pill-yellow{background:rgba(251,191,36,0.15);color:var(--yellow);border:1px solid rgba(251,191,36,0.3)}
+.pill-green{background:rgba(34,197,94,0.15);color:#86efac;border:1px solid rgba(34,197,94,0.3)}
+.pill-aws{background:rgba(255,153,0,0.15);color:var(--aws);border:1px solid rgba(255,153,0,0.3)}
+
+/* ─── LAB CARD ─── */
+.lab-section{margin-bottom:48px;scroll-margin-top:72px}
+.lab-header{display:flex;align-items:center;gap:16px;padding:20px 24px;border-radius:16px 16px 0 0}
+.lab-header.w1{background:linear-gradient(135deg,rgba(59,130,246,0.2),rgba(59,130,246,0.08));border:1px solid rgba(59,130,246,0.3);border-bottom:none}
+.lab-header.w2{background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(168,85,247,0.08));border:1px solid rgba(168,85,247,0.3);border-bottom:none}
+.lab-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.lab-icon.w1{background:rgba(59,130,246,0.2)}
+.lab-icon.w2{background:rgba(168,85,247,0.2)}
+.lab-number{font-size:11px;font-weight:700;letter-spacing:0.1em;font-family:var(--font-en);text-transform:uppercase}
+.lab-number.w1{color:var(--w1h)}
+.lab-number.w2{color:var(--w2h)}
+.lab-title{font-size:1.1rem;font-weight:700;color:white}
+.lab-body{background:var(--bg2);border-radius:0 0 16px 16px;padding:28px;border:1px solid}
+.lab-body.w1{border-color:rgba(59,130,246,0.2);border-top:none}
+.lab-body.w2{border-color:rgba(168,85,247,0.2);border-top:none}
+.lab-intro{background:var(--bg3);border-radius:10px;padding:14px 18px;margin-bottom:24px;color:var(--muted);font-size:0.9rem;border-left:3px solid}
+.lab-intro.w1{border-color:var(--w1)}
+.lab-intro.w2{border-color:var(--w2)}
+.lab-intro strong{color:white}
+
+/* ─── STEPS ─── */
+.steps-container{display:flex;flex-direction:column;gap:12px}
+.step{display:flex;gap:16px;padding:18px 20px;background:var(--bg3);border-radius:12px;border:1px solid var(--border);transition:border-color 0.2s,transform 0.15s}
+.step:hover{transform:translateX(4px)}
+.step.w1-step:hover{border-color:rgba(59,130,246,0.3)}
+.step.w2-step:hover{border-color:rgba(168,85,247,0.3)}
+.step-num{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:var(--font-en);margin-top:2px}
+.step-num.w1{background:var(--w1);color:#fff}
+.step-num.w2{background:var(--w2);color:#fff}
+.step-content{flex:1}
+.step-content p{color:var(--text);font-size:0.9rem}
+.step-content p:not(:last-child){margin-bottom:6px}
+
+/* ─── SUBSTEPS (numbered list inside step) ─── */
+.substep-list{margin:10px 0 0;display:flex;flex-direction:column;gap:6px;padding-left:4px}
+.substep{display:flex;gap:10px;font-size:0.87rem;color:var(--muted);align-items:flex-start}
+.substep-n{flex-shrink:0;font-weight:700;font-family:var(--font-en);color:var(--yellow);min-width:16px}
+
+/* ─── VALUES ─── */
+.val{display:inline-block;padding:1px 8px;border-radius:5px;font-family:var(--font-code);font-size:0.85em;font-weight:600}
+.val-blue{background:rgba(59,130,246,0.15);color:var(--w1h)}
+.val-violet{background:rgba(168,85,247,0.15);color:var(--w2h)}
+.val-yellow{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.val-green{background:rgba(34,197,94,0.15);color:#86efac}
+.val-cyan{background:rgba(6,182,212,0.15);color:#67e8f9}
+.val-aws{background:rgba(255,153,0,0.15);color:var(--aws)}
+.val-red{background:rgba(239,68,68,0.15);color:#fca5a5}
+
+/* ─── CALLOUTS ─── */
+.callout{border-radius:10px;padding:14px 18px;margin:14px 0;display:flex;gap:12px;align-items:flex-start;font-size:0.88rem}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout.tip{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)}
+.callout.tip .callout-text{color:#bfdbfe}
+.callout.warn{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2)}
+.callout.warn .callout-text{color:#fde68a}
+.callout.check{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)}
+.callout.check .callout-text{color:#bbf7d0}
+.callout.danger{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2)}
+.callout.danger .callout-text{color:#fca5a5}
+.callout.violet{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2)}
+.callout.violet .callout-text{color:#e9d5ff}
+
+/* ─── TABLE ─── */
+.input-table{width:100%;border-collapse:collapse;margin:10px 0}
+.input-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-en);color:var(--muted);border-bottom:1px solid var(--border)}
+.input-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.88rem}
+.input-table tr:last-child td{border-bottom:none}
+.input-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ─── CODE ─── */
+.code-wrap{margin:16px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;font-size:11px;font-family:var(--font-en);font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+.code-header.bash{background:rgba(34,197,94,0.15);color:#86efac}
+.code-header.python{background:rgba(59,130,246,0.15);color:#93c5fd}
+.code-header.sql{background:rgba(251,191,36,0.15);color:#fde68a}
+.code-header.ini{background:rgba(6,182,212,0.15);color:#67e8f9}
+.code-dots{display:flex;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot-r{background:#ef4444}.dot-y{background:#fbbf24}.dot-g{background:#22c55e}
+pre{background:#0a0e1a;padding:20px;overflow-x:auto;margin:0;font-family:var(--font-code);font-size:13px;line-height:1.65}
+/* syntax colors */
+.kw{color:#ff79c6}.fn{color:#50fa7b}.str{color:#f1fa8c}.cm{color:#6272a4;font-style:italic}
+.nb{color:#bd93f9}.num{color:#ff79c6}.op{color:#ff79c6}.var{color:#8be9fd}
+.sql-kw{color:#ff79c6}.sql-fn{color:#50fa7b}.sql-str{color:#f1fa8c}.sql-cm{color:#6272a4;font-style:italic}
+.bash-cmd{color:#50fa7b}.bash-flag{color:#8be9fd}.bash-str{color:#f1fa8c}.bash-cm{color:#6272a4;font-style:italic}.bash-var{color:#ff79c6}
+
+/* ─── FREE TIER WARN ─── */
+.freetier-box{background:var(--bg3);border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid rgba(255,153,0,0.25)}
+.freetier-box h4{color:var(--aws);font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-en);margin-bottom:10px}
+.ft-row{display:flex;gap:10px;margin-bottom:6px;font-size:0.87rem}
+.ft-ok{color:var(--green);flex-shrink:0}
+.ft-no{color:var(--red);flex-shrink:0}
+
+/* ─── SECURITY RULES TABLE ─── */
+.sg-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:0.85rem}
+.sg-table th{padding:9px 12px;text-align:left;background:rgba(255,255,255,0.04);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;font-family:var(--font-en);letter-spacing:0.06em}
+.sg-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.sg-table tr:last-child td{border-bottom:none}
+.port-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-family:var(--font-code);font-size:0.82em;font-weight:600;background:rgba(59,130,246,0.15);color:var(--w1h)}
+.port-badge.mysql{background:rgba(168,85,247,0.15);color:var(--w2h)}
+
+/* ─── SUCCESS MARKER ─── */
+.success-marker{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#86efac;border-radius:8px;padding:6px 12px;font-size:0.82rem;font-weight:600;margin:8px 0}
+
+/* ─── SECTION DIVIDER ─── */
+.week-divider{display:flex;align-items:center;gap:16px;margin:60px 0 40px}
+.divider-line{flex:1;height:1px}
+.divider-line.w2{background:linear-gradient(to right,transparent,var(--w2),transparent)}
+.divider-badge{padding:8px 20px;border-radius:99px;font-size:0.85rem;font-weight:700;font-family:var(--font-en);white-space:nowrap}
+.divider-badge.w2{background:rgba(168,85,247,0.15);color:var(--w2h);border:1px solid rgba(168,85,247,0.3)}
+
+/* ─── FILE BLOCK ─── */
+.file-path{font-family:var(--font-code);font-size:0.8rem;color:var(--cyan);background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:3px 10px;display:inline-block;margin-bottom:8px}
+
+/* ─── ENDPOINT TAG ─── */
+.endpoint{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:8px;font-family:var(--font-code);font-size:0.82rem;margin:3px 0}
+.endpoint.get{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#86efac}
+.endpoint.post{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:var(--w1h)}
+.endpoint.put{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:var(--yellow)}
+.endpoint.delete{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#fca5a5}
+.method-badge{font-weight:800;font-size:0.75em;letter-spacing:0.05em}
+
+/* ─── EXERCISES ─── */
+.exercise-card{background:var(--bg3);border-radius:14px;padding:24px;margin-bottom:16px;border:1px solid var(--border)}
+.exercise-num{display:inline-block;width:28px;height:28px;border-radius:8px;text-align:center;line-height:28px;font-size:13px;font-weight:800;font-family:var(--font-en);margin-right:10px}
+.exercise-num.w1{background:var(--w1);color:#fff}
+.exercise-num.w2{background:var(--w2);color:#fff}
+.exercise-title{font-weight:600;color:white;display:inline}
+.exercise-body{margin-top:12px;color:var(--muted);font-size:0.9rem;padding-left:38px}
+.exercise-body li{margin-bottom:5px}
+
+/* ─── QUESTIONS ─── */
+.question-item{padding:14px 0;border-bottom:1px solid var(--border);display:flex;gap:14px}
+.question-item:last-child{border-bottom:none}
+.q-num{width:24px;height:24px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-family:var(--font-en);margin-top:2px}
+.q-num.w1{background:rgba(59,130,246,0.2);color:var(--w1h)}
+.q-num.w2{background:rgba(168,85,247,0.2);color:var(--w2h)}
+.q-keyword{color:white;font-weight:600}
+.q-text{color:var(--muted);font-size:0.9rem}
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch-box{background:var(--bg3);border-radius:12px;padding:20px;border:1px solid var(--border);font-family:var(--font-code);font-size:12.5px;line-height:1.8;color:#94a3b8}
+.arch-box .arc-blue{color:var(--w1h)}
+.arch-box .arc-violet{color:var(--w2h)}
+.arch-box .arc-green{color:#86efac}
+.arch-box .arc-yellow{color:var(--yellow)}
+.arch-box .arc-aws{color:var(--aws)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){.sidebar{display:none}.content{padding:24px 20px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="page-header">
+  <div class="header-badge">🖥️ ICT 24267 Cloud Computing · ภาคเรียน 2/2568</div>
+  <h1>Week 1–2: EC2 & RDS</h1>
+  <p class="subtitle">อาจารย์อำนาจ คงเจริญถิ่น · Amazon Web Services Free Tier</p>
+  <div class="project-tag">📚 Project: Student Record System on AWS</div>
+</header>
+
+<!-- TABS -->
+<nav class="week-tabs">
+  <button class="week-tab active-w1" id="tab-w1" onclick="goTo('week1')">🔵 Week 1 — EC2 + Flask</button>
+  <button class="week-tab" id="tab-w2" onclick="goTo('week2')">🟣 Week 2 — RDS MySQL</button>
+</nav>
+
+<div class="main-layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-week w1">📅 Week 1</div>
+    <a href="#w1-concept" class="w1-link"><span class="sidebar-dot w1"></span>💡 Architecture ภาพรวม</a>
+    <a href="#lab11" class="w1-link"><span class="sidebar-dot w1"></span>LAB 1-1: สร้าง EC2 Instance</a>
+    <a href="#lab12" class="w1-link"><span class="sidebar-dot w1"></span>LAB 1-2: Nginx Reverse Proxy</a>
+    <a href="#lab13" class="w1-link"><span class="sidebar-dot w1"></span>LAB 1-3: Elastic IP</a>
+    <a href="#ex1" class="w1-link"><span class="sidebar-dot w1"></span>📝 แบบฝึกหัด Week 1</a>
+    <a href="#q1" class="w1-link"><span class="sidebar-dot w1"></span>🗒️ คำถามท้ายบท</a>
+  </div>
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-week w2">📅 Week 2</div>
+    <a href="#lab21" class="w2-link"><span class="sidebar-dot w2"></span>LAB 2-1: สร้าง RDS Instance</a>
+    <a href="#lab22" class="w2-link"><span class="sidebar-dot w2"></span>LAB 2-2: MySQL Client + Tables</a>
+    <a href="#lab23" class="w2-link"><span class="sidebar-dot w2"></span>LAB 2-3: Flask + RDS (CRUD)</a>
+    <a href="#ex2" class="w2-link"><span class="sidebar-dot w2"></span>📝 แบบฝึกหัด Week 2</a>
+    <a href="#q2" class="w2-link"><span class="sidebar-dot w2"></span>🗒️ คำถามท้ายบท</a>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<main class="content" id="week1">
+
+<!-- ═══════════════════════ WEEK 1 ═══════════════════════ -->
+<div class="week-header w1" data-week="W1">
+  <div class="week-label">📅 Week 1</div>
+  <div class="week-title">EC2 Advanced<br>Web Server & Flask App</div>
+  <div class="week-desc">สร้าง EC2 Instance พร้อม Python Flask REST API และ Nginx Reverse Proxy — ระบบ Student Record System เวอร์ชัน 1</div>
+  <div class="service-pills">
+    <span class="pill pill-blue">EC2 t3.micro</span>
+    <span class="pill pill-cyan">Python Flask</span>
+    <span class="pill pill-green">Nginx</span>
+    <span class="pill pill-yellow">Security Groups</span>
+    <span class="pill pill-aws">Elastic IP</span>
+  </div>
+</div>
+
+<!-- ARCHITECTURE OVERVIEW -->
+<section id="w1-concept" class="lab-section">
+  <div class="lab-header w1">
+    <div class="lab-icon w1">💡</div>
+    <div><div class="lab-number w1">ภาพรวม Week 1</div><div class="lab-title">Architecture ที่จะสร้าง</div></div>
+  </div>
+  <div class="lab-body w1">
+    <div style="padding:8px 0">
+      <!-- Internet -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+        <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:10px;padding:10px 24px">
+          <span style="font-size:20px">🌐</span>
+          <span style="font-family:var(--font-en);font-weight:700;color:var(--w1h);font-size:0.95rem">Internet</span>
+        </div>
+        <!-- arrow down -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0;margin:0">
+          <div style="width:2px;height:20px;background:linear-gradient(to bottom,var(--w1h),rgba(59,130,246,0.4))"></div>
+          <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid rgba(59,130,246,0.7)"></div>
+        </div>
+
+        <!-- EC2 Box -->
+        <div style="width:100%;border:2px solid rgba(255,153,0,0.45);border-radius:16px;background:rgba(255,153,0,0.06);padding:20px 24px">
+          <!-- EC2 label -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+            <span style="font-size:18px">🖥️</span>
+            <span style="font-family:var(--font-en);font-weight:700;color:var(--aws);font-size:0.82rem;letter-spacing:0.06em;text-transform:uppercase">EC2 t3.micro — Amazon Linux 2023</span>
+          </div>
+
+          <!-- Nginx block -->
+          <div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.35);border-radius:12px;padding:14px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:18px">🔄</span>
+              <div>
+                <div style="font-family:var(--font-en);font-weight:700;color:#86efac;font-size:0.9rem">Nginx</div>
+                <div style="font-size:0.78rem;color:var(--muted);margin-top:1px">Reverse Proxy</div>
+              </div>
+            </div>
+            <div style="font-family:var(--font-code);font-size:0.8rem;background:rgba(34,197,94,0.15);color:#86efac;padding:3px 10px;border-radius:6px;border:1px solid rgba(34,197,94,0.3)">Port 80</div>
+          </div>
+
+          <!-- Arrow Nginx → Flask -->
+          <div style="display:flex;justify-content:center;margin:2px 0 4px">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div style="width:2px;height:14px;background:rgba(59,130,246,0.4)"></div>
+              <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid rgba(59,130,246,0.5)"></div>
+            </div>
+          </div>
+
+          <!-- Flask block -->
+          <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.35);border-radius:12px;padding:14px 20px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:18px">🐍</span>
+                <div>
+                  <div style="font-family:var(--font-en);font-weight:700;color:var(--w1h);font-size:0.9rem">Flask App</div>
+                  <div style="font-size:0.78rem;color:var(--muted);margin-top:1px">Python Web Application</div>
+                </div>
+              </div>
+              <div style="font-family:var(--font-code);font-size:0.8rem;background:rgba(59,130,246,0.15);color:var(--w1h);padding:3px 10px;border-radius:6px;border:1px solid rgba(59,130,246,0.3)">Port 5000</div>
+            </div>
+            <!-- endpoints row -->
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+              <span style="font-family:var(--font-code);font-size:0.76rem;background:rgba(34,197,94,0.12);color:#86efac;padding:2px 8px;border-radius:5px;border:1px solid rgba(34,197,94,0.25)">GET /students</span>
+              <span style="font-family:var(--font-code);font-size:0.76rem;background:rgba(59,130,246,0.12);color:var(--w1h);padding:2px 8px;border-radius:5px;border:1px solid rgba(59,130,246,0.25)">POST /students</span>
+              <span style="font-family:var(--font-code);font-size:0.76rem;background:rgba(251,191,36,0.12);color:var(--yellow);padding:2px 8px;border-radius:5px;border:1px solid rgba(251,191,36,0.25)">PUT /students/{id}</span>
+              <span style="font-family:var(--font-code);font-size:0.76rem;background:rgba(239,68,68,0.12);color:#fca5a5;padding:2px 8px;border-radius:5px;border:1px solid rgba(239,68,68,0.25)">DELETE /students/{id}</span>
+              <span style="font-family:var(--font-code);font-size:0.76rem;background:rgba(34,197,94,0.12);color:#86efac;padding:2px 8px;border-radius:5px;border:1px solid rgba(34,197,94,0.25)">GET /health</span>
+            </div>
+          </div>
+
+          <!-- Data row -->
+          <div style="display:flex;gap:10px">
+            <!-- Week 1 In-Memory -->
+            <div style="flex:1;background:rgba(251,191,36,0.08);border:1px dashed rgba(251,191,36,0.35);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">🧠</span>
+              <div>
+                <div style="font-size:0.78rem;font-weight:700;color:var(--yellow);font-family:var(--font-en)">Week 1 — In-Memory</div>
+                <div style="font-size:0.72rem;color:var(--muted)">ข้อมูลหายเมื่อ restart</div>
+              </div>
+            </div>
+            <!-- Arrow -->
+            <div style="display:flex;align-items:center;color:var(--muted);font-size:18px">→</div>
+            <!-- Week 2 RDS -->
+            <div style="flex:1;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.35);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:16px">🗄️</span>
+              <div>
+                <div style="font-size:0.78rem;font-weight:700;color:var(--w2h);font-family:var(--font-en)">Week 2 — MySQL RDS</div>
+                <div style="font-size:0.72rem;color:var(--muted)">ข้อมูลถาวร บน Cloud</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout tip" style="margin-top:16px">
+      <span class="callout-icon">💡</span>
+      <span class="callout-text"><strong>Week 1 ใช้ In-Memory storage</strong> — ข้อมูลจะหายทุกครั้งที่ restart Flask ใน Week 2 จะเปลี่ยนมาใช้ RDS MySQL จริง</span>
+    </div>
+  </div>
+</section>
+
+<!-- LAB 1-1 -->
+<section id="lab11" class="lab-section">
+  <div class="lab-header w1">
+    <div class="lab-icon w1">🖥️</div>
+    <div><div class="lab-number w1">LAB 1-1</div><div class="lab-title">สร้าง EC2 Instance พร้อม User Data</div></div>
+  </div>
+  <div class="lab-body w1">
+    <div class="freetier-box">
+      <h4>⚠️ Free Tier Checklist</h4>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>ใช้ <strong style="color:white">t3.micro</strong> เท่านั้น</span></div>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>AMI: <strong style="color:white">Amazon Linux 2023</strong> หรือ Ubuntu 22.04 LTS</span></div>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>Storage: <strong style="color:white">8 GB gp3</strong> (ไม่เกิน 30 GB รวม)</span></div>
+      <div class="ft-row"><span class="ft-no">❌</span><span>อย่าสร้าง Instance หลายตัวพร้อมกัน (750 ชม./เดือน รวมทุก Instance)</span></div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 1: สร้าง Key Pair</p>
+    <div class="steps-container" style="margin-bottom:20px">
+      <div class="step w1-step">
+        <div class="step-num w1">1</div>
+        <div class="step-content"><p>AWS Console → <span class="val val-blue">EC2</span> → <span class="val val-yellow">Key Pairs</span> → <span class="val val-blue">Create key pair</span></p></div>
+      </div>
+      <div class="step w1-step">
+        <div class="step-num w1">2</div>
+        <div class="step-content">
+          <p>กรอกข้อมูล:</p>
+          <table class="input-table" style="margin-top:8px">
+            <tr><th>Field</th><th>ค่า</th></tr>
+            <tr><td>Name</td><td><span class="val val-blue">ict24267-key</span></td></tr>
+            <tr><td>Key pair type</td><td><span class="val val-yellow">RSA</span></td></tr>
+            <tr><td>Format (macOS/Linux)</td><td><span class="val val-green">.pem</span></td></tr>
+            <tr><td>Format (Windows + PuTTY)</td><td><span class="val val-cyan">.ppk</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="step w1-step">
+        <div class="step-num w1">3</div>
+        <div class="step-content"><p>คลิก <span class="val val-blue">Create key pair</span> → บันทึกไฟล์ไว้ในที่ปลอดภัย</p><div class="callout warn"><span class="callout-icon">⚠️</span><span class="callout-text">ดาวน์โหลดได้ครั้งเดียว — ถ้าหายต้องสร้างใหม่และ re-launch Instance</span></div></div>
+      </div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 2: สร้าง Security Group</p>
+    <div class="steps-container" style="margin-bottom:20px">
+      <div class="step w1-step">
+        <div class="step-num w1">1</div>
+        <div class="step-content"><p>EC2 → <span class="val val-yellow">Security Groups</span> → <span class="val val-blue">Create security group</span><br>Name: <span class="val val-blue">ict24267-web-sg</span></p></div>
+      </div>
+      <div class="step w1-step">
+        <div class="step-num w1">2</div>
+        <div class="step-content">
+          <p>เพิ่ม <strong style="color:white">Inbound rules</strong> ทั้ง 3 รายการ:</p>
+          <table class="sg-table" style="margin-top:10px">
+            <tr><th>Type</th><th>Port</th><th>Source</th><th>ใช้ทำอะไร</th></tr>
+            <tr><td>SSH</td><td><span class="port-badge">22</span></td><td><code>0.0.0.0/0</code></td><td>เข้าถึง EC2 ผ่าน Terminal</td></tr>
+            <tr><td>HTTP</td><td><span class="port-badge">80</span></td><td><code>0.0.0.0/0</code></td><td>เว็บผ่าน Nginx</td></tr>
+            <tr><td>Custom TCP</td><td><span class="port-badge">5000</span></td><td><code>0.0.0.0/0</code></td><td>Flask dev server โดยตรง</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 3: Launch EC2 พร้อม User Data Script</p>
+    <div class="steps-container" style="margin-bottom:16px">
+      <div class="step w1-step">
+        <div class="step-num w1">1</div>
+        <div class="step-content">
+          <p>EC2 → <span class="val val-yellow">Instances</span> → <span class="val val-blue">Launch instances</span></p>
+          <table class="input-table" style="margin-top:8px">
+            <tr><th>Field</th><th>ค่า</th></tr>
+            <tr><td>Name</td><td><span class="val val-blue">ict24267-webserver</span></td></tr>
+            <tr><td>AMI</td><td><span class="val val-green">Amazon Linux 2023 AMI</span> (Free tier eligible)</td></tr>
+            <tr><td>Instance type</td><td><span class="val val-blue">t3.micro</span> ✅</td></tr>
+            <tr><td>Key pair</td><td><span class="val val-blue">ict24267-key</span></td></tr>
+            <tr><td>Security group</td><td><span class="val val-blue">ict24267-web-sg</span></td></tr>
+            <tr><td>Storage</td><td><span class="val val-yellow">8 GiB gp3</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="step w1-step">
+        <div class="step-num w1">2</div>
+        <div class="step-content">
+          <p>เปิด <span class="val val-yellow">Advanced details</span> → <span class="val val-yellow">User data</span> → วาง script ด้านล่าง</p>
+          <div class="callout tip" style="margin-top:8px"><span class="callout-icon">💡</span><span class="callout-text"><strong>User Data</strong> คือ script ที่รันอัตโนมัติตอน EC2 เปิดครั้งแรก — ติดตั้ง Flask และสร้าง app ให้เลยโดยไม่ต้อง SSH</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>User Data Script — รันอัตโนมัติตอน Instance เริ่มต้น</span><span>Bash</span></div>
+      <pre><code><span class="bash-cm">#!/bin/bash</span>
+<span class="bash-cm"># User Data Script - ICT24267 Week 1</span>
+yum update -y
+yum install -y python3 python3-pip git
+pip3 install flask flask-cors boto3
+
+mkdir -p /home/ec2-user/student-app
+cd /home/ec2-user/student-app
+
+<span class="bash-cm"># สร้าง Flask Application (Week 1 - In-Memory)</span>
+cat > app.py &lt;&lt; <span class="bash-str">'APPEOF'</span>
+<span class="kw">from</span> flask <span class="kw">import</span> Flask, jsonify, request
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+app = Flask(__name__)
+
+<span class="cm"># In-memory storage (Week 1 - ยังไม่มี Database)</span>
+students = [
+    {<span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"name"</span>: <span class="str">"สมชาย ใจดี"</span>, <span class="str">"student_id"</span>: <span class="str">"6401001"</span>, <span class="str">"gpa"</span>: <span class="num">3.5</span>},
+    {<span class="str">"id"</span>: <span class="num">2</span>, <span class="str">"name"</span>: <span class="str">"สมหญิง รักเรียน"</span>, <span class="str">"student_id"</span>: <span class="str">"6401002"</span>, <span class="str">"gpa"</span>: <span class="num">3.8</span>},
+]
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/'</span>)
+<span class="kw">def</span> <span class="fn">index</span>():
+    <span class="kw">return</span> jsonify({<span class="str">"message"</span>: <span class="str">"🎓 Student Record System - Week 1"</span>, <span class="str">"version"</span>: <span class="str">"1.0.0"</span>})
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students'</span>, methods=[<span class="str">'GET'</span>])
+<span class="kw">def</span> <span class="fn">get_students</span>():
+    <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"count"</span>: <span class="nb">len</span>(students), <span class="str">"data"</span>: students})
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> <span class="fn">add_student</span>():
+    data = request.<span class="fn">get_json</span>()
+    new_student = {<span class="str">"id"</span>: <span class="nb">len</span>(students) + <span class="num">1</span>, <span class="str">"name"</span>: data.<span class="fn">get</span>(<span class="str">"name"</span>), <span class="str">"student_id"</span>: data.<span class="fn">get</span>(<span class="str">"student_id"</span>), <span class="str">"gpa"</span>: data.<span class="fn">get</span>(<span class="str">"gpa"</span>, <span class="num">0.0</span>)}
+    students.<span class="fn">append</span>(new_student)
+    <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"data"</span>: new_student}), <span class="num">201</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/health'</span>)
+<span class="kw">def</span> <span class="fn">health</span>():
+    <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"healthy"</span>, <span class="str">"timestamp"</span>: datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()})
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    app.<span class="fn">run</span>(host=<span class="str">'0.0.0.0'</span>, port=<span class="num">5000</span>, debug=<span class="nb">True</span>)
+APPEOF
+
+chown -R ec2-user:ec2-user /home/ec2-user/student-app
+
+<span class="bash-cm"># สร้าง systemd service ให้รันอัตโนมัติ</span>
+cat > /etc/systemd/system/student-app.service &lt;&lt; <span class="bash-str">'SVCEOF'</span>
+[Unit]
+Description=Student Record System Flask App
+After=network.target
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/student-app
+ExecStart=/usr/bin/python3 app.py
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable student-app
+systemctl start student-app
+echo <span class="bash-str">"Setup complete!"</span> >> /var/log/user-data.log</code></pre>
+    </div>
+
+    <div class="steps-container" style="margin-top:12px">
+      <div class="step w1-step"><div class="step-num w1">3</div><div class="step-content"><p>คลิก <span class="val val-blue">Launch instance</span> → รอ 1-2 นาทีจนสถานะเป็น <span class="val val-green">Running</span></p></div></div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 4: เชื่อมต่อผ่าน Web Console</p>
+    <div class="steps-container" style="margin-bottom:20px">
+      <div class="step w1-step"><div class="step-num w1">1</div><div class="step-content"><p>EC2 → Instances → เลือก <span class="val val-blue">ict24267-webserver</span> → คลิก <span class="val val-blue">Connect</span></p></div></div>
+      <div class="step w1-step"><div class="step-num w1">2</div><div class="step-content"><p>เลือกแท็บ <span class="val val-yellow">EC2 Instance Connect</span> → คลิก <span class="val val-blue">Connect</span> → หน้าต่าง Terminal จะเปิดใน Browser</p></div></div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 5: ทดสอบ API</p>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>ทดสอบ API ด้วย curl</span><span>Bash</span></div>
+      <pre><code><span class="bash-cm"># ทดสอบจากภายใน EC2</span>
+curl http://localhost:5000/
+curl http://localhost:5000/students
+curl http://localhost:5000/health
+
+<span class="bash-cm"># ทดสอบจากภายนอก (แทนที่ด้วย Public IP จริง)</span>
+curl http://&lt;YOUR_PUBLIC_IP&gt;:5000/students
+
+<span class="bash-cm"># เพิ่มนักศึกษาใหม่</span>
+curl -X POST http://&lt;YOUR_PUBLIC_IP&gt;:5000/students \
+  -H <span class="bash-str">"Content-Type: application/json"</span> \
+  -d <span class="bash-str">'{"name": "สมศักดิ์ เก่งมาก", "student_id": "6401003", "gpa": 3.9}'</span></code></pre>
+    </div>
+    <div class="success-marker">✅ เห็น JSON response จาก Flask → EC2 + Flask พร้อมใช้งาน</div>
+  </div>
+</section>
+
+<!-- LAB 1-2 -->
+<section id="lab12" class="lab-section">
+  <div class="lab-header w1">
+    <div class="lab-icon w1">🔄</div>
+    <div><div class="lab-number w1">LAB 1-2</div><div class="lab-title">ติดตั้ง Nginx เป็น Reverse Proxy</div></div>
+  </div>
+  <div class="lab-body w1">
+    <div class="lab-intro w1">
+      <strong>Reverse Proxy</strong> คือตัวกลางรับ request จาก Internet แล้วส่งต่อให้ Flask — ทำให้รับได้ทาง <strong>Port 80</strong> แทน 5000 และปลอดภัยกว่า
+    </div>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>ติดตั้งและตั้งค่า Nginx — รันบน EC2</span><span>Bash</span></div>
+      <pre><code><span class="bash-cm"># ติดตั้ง Nginx</span>
+sudo yum install -y nginx
+
+<span class="bash-cm"># สร้างไฟล์ config</span>
+sudo tee /etc/nginx/conf.d/student-app.conf &lt;&lt; <span class="bash-str">'EOF'</span>
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+EOF
+
+<span class="bash-cm"># เริ่ม Nginx</span>
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+<span class="bash-cm"># ทดสอบ — ตอนนี้ใช้ Port 80 แล้ว (ไม่ต้องใส่ :5000)</span>
+curl http://&lt;YOUR_PUBLIC_IP&gt;/
+curl http://&lt;YOUR_PUBLIC_IP&gt;/students</code></pre>
+    </div>
+    <div class="success-marker">✅ เข้าได้ทาง Port 80 โดยไม่ต้องระบุ :5000</div>
+  </div>
+</section>
+
+<!-- LAB 1-3 -->
+<section id="lab13" class="lab-section">
+  <div class="lab-header w1">
+    <div class="lab-icon w1">📍</div>
+    <div><div class="lab-number w1">LAB 1-3</div><div class="lab-title">จัดการ Elastic IP</div></div>
+  </div>
+  <div class="lab-body w1">
+    <div class="lab-intro w1">
+      ปกติ EC2 จะเปลี่ยน Public IP ทุกครั้งที่ Stop/Start — <strong>Elastic IP</strong> คือ IP ถาวรที่ผูกกับ Instance
+    </div>
+    <div class="callout warn"><span class="callout-icon">⚠️</span><span class="callout-text"><strong>Elastic IP ฟรี เฉพาะเมื่อผูกกับ Instance ที่กำลัง Running เท่านั้น</strong> — ถ้า Allocate แล้วไม่ได้ใช้ หรือ Instance ถูก Stop จะมีค่าใช้จ่าย!</span></div>
+    <div class="steps-container" style="margin-top:16px">
+      <div class="step w1-step"><div class="step-num w1">1</div><div class="step-content"><p>EC2 → <span class="val val-yellow">Elastic IPs</span> → <span class="val val-blue">Allocate Elastic IP address</span> → คลิก <span class="val val-blue">Allocate</span></p></div></div>
+      <div class="step w1-step"><div class="step-num w1">2</div><div class="step-content"><p>เลือก Elastic IP ที่ได้ → <span class="val val-yellow">Actions</span> → <span class="val val-blue">Associate Elastic IP address</span></p></div></div>
+      <div class="step w1-step"><div class="step-num w1">3</div><div class="step-content"><p>Instance: <span class="val val-blue">ict24267-webserver</span> → คลิก <span class="val val-blue">Associate</span></p><div class="success-marker">✅ IP จะไม่เปลี่ยนแม้ Stop/Start Instance</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXERCISES W1 -->
+<section id="ex1" class="lab-section">
+  <div class="lab-header w1"><div class="lab-icon w1">📝</div><div><div class="lab-number w1">แบบฝึกหัด</div><div class="lab-title">Week 1</div></div></div>
+  <div class="lab-body w1">
+    <div class="exercise-card">
+      <div><span class="exercise-num w1">1</span><span class="exercise-title">เพิ่ม Endpoint ใหม่ (PUT / DELETE)</span></div>
+      <div class="exercise-body">
+        <p>แก้ไขไฟล์ <span class="val val-cyan">app.py</span> บน EC2 เพิ่ม 2 endpoints นี้:</p>
+        <div class="code-wrap" style="margin-top:12px">
+          <div class="code-header python"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>TODO: เติมให้สมบูรณ์</span><span>Python</span></div>
+          <pre><code><span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students/&lt;int:student_id&gt;'</span>, methods=[<span class="str">'PUT'</span>])
+<span class="kw">def</span> <span class="fn">update_student</span>(student_id):
+    <span class="cm">"""อัปเดตข้อมูลนักศึกษาตาม ID
+    Request body: {"name": "...", "gpa": ...}"""</span>
+    <span class="cm"># เขียนโค้ดของคุณที่นี่</span>
+    <span class="kw">pass</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students/&lt;int:student_id&gt;'</span>, methods=[<span class="str">'DELETE'</span>])
+<span class="kw">def</span> <span class="fn">delete_student</span>(student_id):
+    <span class="cm">"""ลบข้อมูลนักศึกษาตาม ID"""</span>
+    <span class="cm"># เขียนโค้ดของคุณที่นี่</span>
+    <span class="kw">pass</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="exercise-card">
+      <div><span class="exercise-num w1">2</span><span class="exercise-title">Monitoring ด้วย CloudWatch</span></div>
+      <div class="exercise-body">
+        <ul style="padding-left:16px">
+          <li>EC2 → Instances → เลือก Instance → แท็บ <strong style="color:white">Monitoring</strong></li>
+          <li>บันทึกค่า: CPU Utilization, Network In/Out, Status Check</li>
+          <li>ทดลอง stress test แล้วสังเกตกราฟ:</li>
+        </ul>
+        <div class="code-wrap" style="margin-top:10px">
+          <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>Stress Test</span><span>Bash</span></div>
+          <pre><code>sudo yum install -y stress
+stress --cpu 1 --timeout 60</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUESTIONS W1 -->
+<section id="q1" class="lab-section">
+  <div class="lab-header w1"><div class="lab-icon w1">🗒️</div><div><div class="lab-number w1">คำถามท้ายบท</div><div class="lab-title">Week 1 (5 ข้อ)</div></div></div>
+  <div class="lab-body w1">
+    <div class="question-item"><div class="q-num w1">1</div><div class="q-text"><span class="q-keyword">EC2 Instance Types: </span>t2.micro vs t3.micro ต่างกันอย่างไร? และทำไม AWS ถึงแนะนำ t3.micro สำหรับ workload ใหม่?</div></div>
+    <div class="question-item"><div class="q-num w1">2</div><div class="q-text"><span class="q-keyword">Security Groups: </span>อธิบายความแตกต่างระหว่าง Inbound และ Outbound rules พร้อมยกตัวอย่างว่าทำไมการตั้งค่า Outbound ก็มีความสำคัญ</div></div>
+    <div class="question-item"><div class="q-num w1">3</div><div class="q-text"><span class="q-keyword">User Data vs SSH: </span>เปรียบเทียบข้อดีข้อเสียของการ configure server ผ่าน User Data script กับการ SSH เข้าไปตั้งค่าเอง</div></div>
+    <div class="question-item"><div class="q-num w1">4</div><div class="q-text"><span class="q-keyword">Elastic IP: </span>หากลืม Release Elastic IP ที่ไม่ได้ใช้งาน จะเกิดอะไรขึ้น? และต้องทำอย่างไรเพื่อหลีกเลี่ยงค่าใช้จ่าย?</div></div>
+    <div class="question-item"><div class="q-num w1">5</div><div class="q-text"><span class="q-keyword">Flask Architecture: </span>อธิบายว่าทำไมถึงต้องใช้ Nginx เป็น Reverse Proxy หน้า Flask แทนที่จะให้ Flask รับ request โดยตรง</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ WEEK 2 ═══════════════════════ -->
+<div class="week-divider" id="week2">
+  <div class="divider-line w2"></div>
+  <div class="divider-badge w2">📅 Week 2</div>
+  <div class="divider-line w2"></div>
+</div>
+
+<div class="week-header w2" data-week="W2">
+  <div class="week-label">📅 Week 2</div>
+  <div class="week-title">RDS — Relational<br>Database Service</div>
+  <div class="week-desc">สร้าง MySQL Database บน AWS RDS แล้วเชื่อมต่อกับ Flask App — อัปเกรดจาก In-Memory เป็น Database จริง</div>
+  <div class="service-pills">
+    <span class="pill pill-violet">RDS MySQL 8.0</span>
+    <span class="pill pill-cyan">PyMySQL</span>
+    <span class="pill pill-yellow">python-dotenv</span>
+    <span class="pill pill-green">CRUD API</span>
+    <span class="pill pill-blue">Security Group</span>
+  </div>
+</div>
+
+<!-- LAB 2-1 -->
+<section id="lab21" class="lab-section">
+  <div class="lab-header w2">
+    <div class="lab-icon w2">🗄️</div>
+    <div><div class="lab-number w2">LAB 2-1</div><div class="lab-title">สร้าง RDS MySQL Instance</div></div>
+  </div>
+  <div class="lab-body w2">
+    <div class="freetier-box">
+      <h4>⚠️ Free Tier Checklist</h4>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>Instance class: <strong style="color:white">db.t3.micro</strong> เท่านั้น</span></div>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>Storage: <strong style="color:white">20 GB</strong> (ไม่เกิน 20 GB)</span></div>
+      <div class="ft-row"><span class="ft-ok">✅</span><span>เลือก <strong style="color:white">Single-AZ</strong> (ไม่ใช่ Multi-AZ)</span></div>
+      <div class="ft-row"><span class="ft-no">❌</span><span>อย่าเปิด <strong style="color:white">Multi-AZ</strong> (มีค่าใช้จ่าย!)</span></div>
+      <div class="ft-row"><span class="ft-no">❌</span><span>อย่าเปิด <strong style="color:white">Performance Insights</strong> เกิน 7 วัน</span></div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 1: สร้าง Security Group สำหรับ RDS</p>
+    <div class="steps-container" style="margin-bottom:20px">
+      <div class="step w2-step">
+        <div class="step-num w2">1</div>
+        <div class="step-content"><p>EC2 → Security Groups → <span class="val val-violet">Create security group</span><br>Name: <span class="val val-violet">ict24267-rds-sg</span></p></div>
+      </div>
+      <div class="step w2-step">
+        <div class="step-num w2">2</div>
+        <div class="step-content">
+          <p>เพิ่ม Inbound rule:</p>
+          <table class="sg-table" style="margin-top:8px">
+            <tr><th>Type</th><th>Port</th><th>Source</th></tr>
+            <tr><td>MySQL/Aurora</td><td><span class="port-badge mysql">3306</span></td><td><code>ict24267-web-sg</code> (เลือก SG ของ EC2)</td></tr>
+          </table>
+          <div class="callout tip" style="margin-top:8px"><span class="callout-icon">💡</span><span class="callout-text"><strong>Best Practice:</strong> อนุญาตเฉพาะ EC2 Security Group เข้าถึง RDS — ไม่เปิดให้ Public</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 2: สร้าง RDS Instance</p>
+    <div class="steps-container" style="margin-bottom:20px">
+      <div class="step w2-step">
+        <div class="step-num w2">1</div>
+        <div class="step-content"><p>AWS Console → <span class="val val-violet">RDS</span> → <span class="val val-violet">Create database</span></p></div>
+      </div>
+      <div class="step w2-step">
+        <div class="step-num w2">2</div>
+        <div class="step-content">
+          <p>ตั้งค่าตามนี้:</p>
+          <table class="input-table" style="margin-top:8px">
+            <tr><th>Field</th><th>ค่า</th></tr>
+            <tr><td>Engine</td><td><span class="val val-violet">MySQL 8.0.x</span></td></tr>
+            <tr><td>Templates</td><td><span class="val val-green">Free tier ✅</span></td></tr>
+            <tr><td>DB instance identifier</td><td><span class="val val-violet">ict24267-db</span></td></tr>
+            <tr><td>Master username</td><td><span class="val val-yellow">admin</span></td></tr>
+            <tr><td>Master password</td><td><span class="val val-yellow">ICT24267@2568</span> (หรือกำหนดเอง)</td></tr>
+            <tr><td>DB instance class</td><td><span class="val val-violet">db.t3.micro</span> ✅</td></tr>
+            <tr><td>Allocated storage</td><td><span class="val val-yellow">20 GB</span> ✅</td></tr>
+            <tr><td>Enable storage autoscaling</td><td><span class="val val-red">❌ ปิด</span></td></tr>
+            <tr><td>Availability</td><td><span class="val val-green">Single DB instance</span> ✅</td></tr>
+            <tr><td>Public access</td><td><span class="val val-green">No</span> ✅</td></tr>
+            <tr><td>VPC security group</td><td><span class="val val-violet">ict24267-rds-sg</span></td></tr>
+            <tr><td>Database name</td><td><span class="val val-violet">student_db</span></td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="step w2-step"><div class="step-num w2">3</div><div class="step-content"><p>คลิก <span class="val val-violet">Create database</span> → รอ 5-10 นาที</p></div></div>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 3: บันทึก Endpoint</p>
+    <div class="steps-container">
+      <div class="step w2-step">
+        <div class="step-num w2">1</div>
+        <div class="step-content">
+          <p>RDS → Databases → คลิก <span class="val val-violet">ict24267-db</span> → แท็บ <span class="val val-yellow">Connectivity & security</span></p>
+          <p style="margin-top:8px"><strong style="color:#fbbf24">📌 บันทึก Endpoint ไว้!</strong> รูปแบบ:</p>
+          <div style="background:#0a0e1a;border:1px dashed rgba(168,85,247,0.4);border-radius:8px;padding:10px 14px;margin-top:6px;font-family:var(--font-code);font-size:0.82rem;color:var(--w2h)">ict24267-db.<span style="color:#c084fc">xxxxxxxxxx</span>.ap-southeast-1.rds.amazonaws.com</div>
+          <div class="success-marker">✅ RDS พร้อมใช้งาน สถานะ: Available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAB 2-2 -->
+<section id="lab22" class="lab-section">
+  <div class="lab-header w2">
+    <div class="lab-icon w2">🔌</div>
+    <div><div class="lab-number w2">LAB 2-2</div><div class="lab-title">ติดตั้ง MySQL Client และสร้าง Tables</div></div>
+  </div>
+  <div class="lab-body w2">
+    <div class="lab-intro w2">SSH เข้า EC2 แล้วทำตามขั้นตอนด้านล่างเพื่อติดตั้ง MySQL Client และสร้าง Database Structure</div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 1: ติดตั้ง MySQL Client บน EC2</p>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>ติดตั้ง MySQL Community Server</span><span>Bash</span></div>
+      <pre><code><span class="bash-cm"># 1. Update packages</span>
+sudo dnf update -y
+
+<span class="bash-cm"># 2. Install MySQL Community repo</span>
+sudo dnf install -y https://dev.mysql.com/get/mysql84-community-release-el9-1.noarch.rpm
+
+<span class="bash-cm"># 3. Import GPG key</span>
+sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
+
+<span class="bash-cm"># 4. Install MySQL Server 8.4 (LTS)</span>
+sudo dnf install -y mysql-community-server
+
+<span class="bash-cm"># 5. Start & enable service</span>
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
+
+<span class="bash-cm"># 6. ดึง temp root password แล้วตั้งค่าความปลอดภัย</span>
+sudo grep <span class="bash-str">'temporary password'</span> /var/log/mysqld.log
+sudo mysql_secure_installation
+
+<span class="bash-cm"># 7. ตรวจสอบ version</span>
+mysql --version</code></pre>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 2: เชื่อมต่อ RDS และสร้าง Database</p>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>เชื่อมต่อ RDS (แทนที่ด้วย Endpoint จริง)</span><span>Bash</span></div>
+      <pre><code>mysql -h ict24267-db.xxxxxxxxxx.ap-southeast-1.rds.amazonaws.com \
+      -u admin -p</code></pre>
+    </div>
+
+    <div class="code-wrap" style="margin-top:8px">
+      <div class="code-header sql"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>สร้าง Database, Tables และ Insert ข้อมูลตัวอย่าง</span><span>SQL</span></div>
+      <pre><code><span class="sql-cm">-- สร้าง Database</span>
+<span class="sql-kw">CREATE DATABASE IF NOT EXISTS</span> student_db
+  <span class="sql-kw">CHARACTER SET</span> utf8mb4 <span class="sql-kw">COLLATE</span> utf8mb4_unicode_ci;
+<span class="sql-kw">USE</span> student_db;
+
+<span class="sql-cm">-- ตาราง students</span>
+<span class="sql-kw">CREATE TABLE</span> students (
+    id              <span class="sql-fn">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    student_id      <span class="sql-fn">VARCHAR</span>(<span class="num">20</span>) <span class="sql-kw">UNIQUE NOT NULL</span>,
+    name            <span class="sql-fn">VARCHAR</span>(<span class="num">100</span>) <span class="sql-kw">NOT NULL</span>,
+    email           <span class="sql-fn">VARCHAR</span>(<span class="num">100</span>),
+    faculty         <span class="sql-fn">VARCHAR</span>(<span class="num">100</span>),
+    major           <span class="sql-fn">VARCHAR</span>(<span class="num">100</span>),
+    gpa             <span class="sql-fn">DECIMAL</span>(<span class="num">3,2</span>) <span class="sql-kw">DEFAULT</span> <span class="num">0.00</span>,
+    enrollment_year <span class="sql-fn">INT</span>,
+    created_at      <span class="sql-fn">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    updated_at      <span class="sql-fn">TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>
+);
+
+<span class="sql-cm">-- ตาราง courses</span>
+<span class="sql-kw">CREATE TABLE</span> courses (
+    id          <span class="sql-fn">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    course_code <span class="sql-fn">VARCHAR</span>(<span class="num">20</span>) <span class="sql-kw">UNIQUE NOT NULL</span>,
+    course_name <span class="sql-fn">VARCHAR</span>(<span class="num">200</span>) <span class="sql-kw">NOT NULL</span>,
+    credits     <span class="sql-fn">INT DEFAULT</span> <span class="num">3</span>,
+    instructor  <span class="sql-fn">VARCHAR</span>(<span class="num">100</span>)
+);
+
+<span class="sql-cm">-- ตาราง enrollments</span>
+<span class="sql-kw">CREATE TABLE</span> enrollments (
+    id         <span class="sql-fn">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    student_id <span class="sql-fn">INT</span>,
+    course_id  <span class="sql-fn">INT</span>,
+    grade      <span class="sql-fn">VARCHAR</span>(<span class="num">2</span>),
+    semester   <span class="sql-fn">VARCHAR</span>(<span class="num">20</span>),
+    <span class="sql-kw">FOREIGN KEY</span> (student_id) <span class="sql-kw">REFERENCES</span> students(id),
+    <span class="sql-kw">FOREIGN KEY</span> (course_id)  <span class="sql-kw">REFERENCES</span> courses(id)
+);
+
+<span class="sql-cm">-- ใส่ข้อมูลตัวอย่าง</span>
+<span class="sql-kw">INSERT INTO</span> students (student_id, name, email, faculty, major, gpa, enrollment_year) <span class="sql-kw">VALUES</span>
+(<span class="sql-str">'6401001'</span>, <span class="sql-str">'สมชาย ใจดี'</span>,     <span class="sql-str">'somchai@example.com'</span>, <span class="sql-str">'ICT'</span>, <span class="sql-str">'Computer Science'</span>,     <span class="num">3.50</span>, <span class="num">2564</span>),
+(<span class="sql-str">'6401002'</span>, <span class="sql-str">'สมหญิง รักเรียน'</span>, <span class="sql-str">'somying@example.com'</span>, <span class="sql-str">'ICT'</span>, <span class="sql-str">'Information Technology'</span>, <span class="num">3.80</span>, <span class="num">2564</span>),
+(<span class="sql-str">'6401003'</span>, <span class="sql-str">'สมศักดิ์ เก่งมาก'</span>, <span class="sql-str">'somsak@example.com'</span>,  <span class="sql-str">'ICT'</span>, <span class="sql-str">'Digital Innovation'</span>,    <span class="num">3.90</span>, <span class="num">2564</span>);
+
+<span class="sql-kw">INSERT INTO</span> courses (course_code, course_name, credits, instructor) <span class="sql-kw">VALUES</span>
+(<span class="sql-str">'ICT24267'</span>, <span class="sql-str">'Cloud Computing'</span>,          <span class="num">3</span>, <span class="sql-str">'อ.อำนาจ คงเจริญถิ่น'</span>),
+(<span class="sql-str">'ICT24101'</span>, <span class="sql-str">'Introduction to Programming'</span>, <span class="num">3</span>, <span class="sql-str">'อ.สมชาย วิทยาการ'</span>);
+
+<span class="sql-cm">-- ตรวจสอบ</span>
+<span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> students;
+<span class="sql-kw">SELECT</span> * <span class="sql-kw">FROM</span> courses;
+<span class="sql-kw">EXIT</span>;</code></pre>
+    </div>
+    <div class="success-marker">✅ Database และ Tables พร้อมใช้งาน</div>
+  </div>
+</section>
+
+<!-- LAB 2-3 -->
+<section id="lab23" class="lab-section">
+  <div class="lab-header w2">
+    <div class="lab-icon w2">⚡</div>
+    <div><div class="lab-number w2">LAB 2-3</div><div class="lab-title">อัปเดต Flask App ให้ใช้ RDS</div></div>
+  </div>
+  <div class="lab-body w2">
+    <div class="lab-intro w2">อัปเกรด Flask App จาก In-Memory เป็น <strong>MySQL RDS จริง</strong> พร้อม CRUD ครบ — GET, POST, PUT, DELETE, และ Statistics</div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin-bottom:12px">ขั้นตอนที่ 1: ติดตั้ง Python Libraries</p>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>ติดตั้ง dependencies บน EC2</span><span>Bash</span></div>
+      <pre><code>pip3 install pymysql sqlalchemy flask-sqlalchemy python-dotenv</code></pre>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 2: สร้างไฟล์ .env</p>
+    <div class="file-path">/home/ec2-user/student-app/.env</div>
+    <div class="code-wrap">
+      <div class="code-header ini"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>.env — แทนที่ DB_HOST ด้วย Endpoint จริง</span><span>ENV</span></div>
+      <pre><code>DB_HOST=ict24267-db.xxxxxxxxxx.ap-southeast-1.rds.amazonaws.com
+DB_PORT=3306
+DB_NAME=student_db
+DB_USER=admin
+DB_PASSWORD=ICT24267@2568
+SECRET_KEY=ict24267-secret-key-2568</code></pre>
+    </div>
+    <div class="code-wrap" style="margin-top:8px">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>บันทึกไฟล์ .env ด้วยคำสั่ง</span><span>Bash</span></div>
+      <pre><code>cat > /home/ec2-user/student-app/.env &lt;&lt; <span class="bash-str">'EOF'</span>
+DB_HOST=ict24267-db.xxxxxxxxxx.ap-southeast-1.rds.amazonaws.com
+DB_PORT=3306
+DB_NAME=student_db
+DB_USER=admin
+DB_PASSWORD=ICT24267@2568
+SECRET_KEY=ict24267-secret-key-2568
+EOF
+
+chmod 600 /home/ec2-user/student-app/.env</code></pre>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 3: สร้างไฟล์ database.py</p>
+    <div class="file-path">/home/ec2-user/student-app/database.py</div>
+    <div class="code-wrap">
+      <div class="code-header python"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>database.py — Database Connection Helper</span><span>Python</span></div>
+      <pre><code>cat > /home/ec2-user/student-app/database.py &lt;&lt; <span class="bash-str">'EOF'</span>
+<span class="kw">import</span> pymysql
+<span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+
+load_dotenv()
+
+<span class="kw">def</span> <span class="fn">get_connection</span>():
+    <span class="kw">return</span> pymysql.<span class="fn">connect</span>(
+        host=os.<span class="fn">getenv</span>(<span class="str">'DB_HOST'</span>),
+        port=<span class="nb">int</span>(os.<span class="fn">getenv</span>(<span class="str">'DB_PORT'</span>, <span class="num">3306</span>)),
+        database=os.<span class="fn">getenv</span>(<span class="str">'DB_NAME'</span>),
+        user=os.<span class="fn">getenv</span>(<span class="str">'DB_USER'</span>),
+        password=os.<span class="fn">getenv</span>(<span class="str">'DB_PASSWORD'</span>),
+        charset=<span class="str">'utf8mb4'</span>,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+<span class="kw">def</span> <span class="fn">execute_query</span>(query, params=<span class="nb">None</span>, fetch=<span class="nb">True</span>):
+    conn = <span class="fn">get_connection</span>()
+    <span class="kw">try</span>:
+        <span class="kw">with</span> conn.<span class="fn">cursor</span>() <span class="kw">as</span> cursor:
+            cursor.<span class="fn">execute</span>(query, params <span class="kw">or</span> ())
+            <span class="kw">if</span> fetch:
+                <span class="kw">return</span> cursor.<span class="fn">fetchall</span>()
+            <span class="kw">else</span>:
+                conn.<span class="fn">commit</span>()     <span class="cm"># ✅ commit ทันทีหลัง write</span>
+                <span class="kw">return</span> cursor.lastrowid
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e:
+        conn.<span class="fn">rollback</span>()         <span class="cm"># ✅ rollback ถ้าเกิด error</span>
+        <span class="kw">raise</span> e
+    <span class="kw">finally</span>:
+        conn.<span class="fn">close</span>()
+EOF</code></pre>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 4: อัปเดตไฟล์ app.py (Week 2 Version)</p>
+    <div class="file-path">/home/ec2-user/student-app/app.py</div>
+    <div class="code-wrap">
+      <div class="code-header python"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>app.py — Week 2 (Flask + RDS, CRUD ครบ)</span><span>Python</span></div>
+      <pre><code>cat > /home/ec2-user/student-app/app.py &lt;&lt; <span class="bash-str">'APPEOF'</span>
+<span class="kw">from</span> flask <span class="kw">import</span> Flask, jsonify, request
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+<span class="kw">from</span> database <span class="kw">import</span> execute_query, get_connection
+
+load_dotenv()
+app = Flask(__name__)
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/'</span>)
+<span class="kw">def</span> <span class="fn">index</span>():
+    <span class="kw">return</span> jsonify({<span class="str">"message"</span>: <span class="str">"Student Record System - Week 2"</span>, <span class="str">"database"</span>: <span class="str">"MySQL RDS"</span>, <span class="str">"version"</span>: <span class="str">"2.0.0"</span>})
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/health'</span>)
+<span class="kw">def</span> <span class="fn">health</span>():
+    db_status = <span class="str">"disconnected"</span>
+    <span class="kw">try</span>:
+        conn = <span class="fn">get_connection</span>(); conn.<span class="fn">close</span>(); db_status = <span class="str">"connected"</span>
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e:
+        db_status = <span class="nb">f</span><span class="str">"error: {str(e)}"</span>
+    <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"healthy"</span>, <span class="str">"database"</span>: db_status, <span class="str">"timestamp"</span>: datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()})
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students'</span>, methods=[<span class="str">'GET'</span>])
+<span class="kw">def</span> <span class="fn">get_students</span>():
+    <span class="kw">try</span>:
+        faculty = request.args.<span class="fn">get</span>(<span class="str">'faculty'</span>)
+        min_gpa = request.args.<span class="fn">get</span>(<span class="str">'min_gpa'</span>, type=<span class="nb">float</span>)
+        query = <span class="str">"SELECT * FROM students WHERE 1=1"</span>; params = []
+        <span class="kw">if</span> faculty: query += <span class="str">" AND faculty = %s"</span>; params.<span class="fn">append</span>(faculty)
+        <span class="kw">if</span> min_gpa: query += <span class="str">" AND gpa >= %s"</span>; params.<span class="fn">append</span>(min_gpa)
+        students = <span class="fn">execute_query</span>(query + <span class="str">" ORDER BY student_id"</span>, params)
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"count"</span>: <span class="nb">len</span>(students), <span class="str">"data"</span>: students})
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">str</span>(e)}), <span class="num">500</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students/&lt;int:student_id&gt;'</span>, methods=[<span class="str">'GET'</span>])
+<span class="kw">def</span> <span class="fn">get_student</span>(student_id):
+    <span class="kw">try</span>:
+        result = <span class="fn">execute_query</span>(<span class="str">"SELECT * FROM students WHERE id = %s"</span>, (student_id,))
+        <span class="kw">if</span> result: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"data"</span>: result[<span class="num">0</span>]})
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="str">"Student not found"</span>}), <span class="num">404</span>
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">str</span>(e)}), <span class="num">500</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> <span class="fn">create_student</span>():
+    <span class="kw">try</span>:
+        data = request.<span class="fn">get_json</span>()
+        <span class="kw">for</span> field <span class="kw">in</span> [<span class="str">'student_id'</span>, <span class="str">'name'</span>]:
+            <span class="kw">if not</span> data.<span class="fn">get</span>(field): <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">f</span><span class="str">"Missing: {field}"</span>}), <span class="num">400</span>
+        new_id = <span class="fn">execute_query</span>(
+            <span class="str">"INSERT INTO students (student_id,name,email,faculty,major,gpa,enrollment_year) VALUES (%s,%s,%s,%s,%s,%s,%s)"</span>,
+            (data[<span class="str">'student_id'</span>],data[<span class="str">'name'</span>],data.<span class="fn">get</span>(<span class="str">'email'</span>,<span class="str">''</span>),data.<span class="fn">get</span>(<span class="str">'faculty'</span>,<span class="str">''</span>),data.<span class="fn">get</span>(<span class="str">'major'</span>,<span class="str">''</span>),data.<span class="fn">get</span>(<span class="str">'gpa'</span>,<span class="num">0.00</span>),data.<span class="fn">get</span>(<span class="str">'enrollment_year'</span>,datetime.<span class="fn">now</span>().year+<span class="num">543</span>)), fetch=<span class="nb">False</span>)
+        student = <span class="fn">execute_query</span>(<span class="str">"SELECT * FROM students WHERE id = %s"</span>, (new_id,))
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"data"</span>: student[<span class="num">0</span>]}), <span class="num">201</span>
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">str</span>(e)}), <span class="num">500</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students/&lt;int:student_id&gt;'</span>, methods=[<span class="str">'PUT'</span>])
+<span class="kw">def</span> <span class="fn">update_student</span>(student_id):
+    <span class="kw">try</span>:
+        existing = <span class="fn">execute_query</span>(<span class="str">"SELECT id FROM students WHERE id = %s"</span>, (student_id,))
+        <span class="kw">if not</span> existing: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="str">"Student not found"</span>}), <span class="num">404</span>
+        data = request.<span class="fn">get_json</span>()
+        <span class="fn">execute_query</span>(<span class="str">"UPDATE students SET name=%s,email=%s,faculty=%s,major=%s,gpa=%s WHERE id=%s"</span>,
+            (data.<span class="fn">get</span>(<span class="str">'name'</span>),data.<span class="fn">get</span>(<span class="str">'email'</span>),data.<span class="fn">get</span>(<span class="str">'faculty'</span>),data.<span class="fn">get</span>(<span class="str">'major'</span>),data.<span class="fn">get</span>(<span class="str">'gpa'</span>),student_id), fetch=<span class="nb">False</span>)
+        student = <span class="fn">execute_query</span>(<span class="str">"SELECT * FROM students WHERE id = %s"</span>, (student_id,))
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"data"</span>: student[<span class="num">0</span>]})
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">str</span>(e)}), <span class="num">500</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/students/&lt;int:student_id&gt;'</span>, methods=[<span class="str">'DELETE'</span>])
+<span class="kw">def</span> <span class="fn">delete_student</span>(student_id):
+    <span class="kw">try</span>:
+        <span class="fn">execute_query</span>(<span class="str">"DELETE FROM students WHERE id = %s"</span>, (student_id,), fetch=<span class="nb">False</span>)
+        <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"message"</span>: <span class="nb">f</span><span class="str">"Deleted ID {student_id}"</span>})
+    <span class="kw">except</span> <span class="nb">Exception</span> <span class="kw">as</span> e: <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"error"</span>, <span class="str">"message"</span>: <span class="nb">str</span>(e)}), <span class="num">500</span>
+
+<span class="op">@</span>app.<span class="fn">route</span>(<span class="str">'/stats'</span>)
+<span class="kw">def</span> <span class="fn">get_stats</span>():
+    total   = <span class="fn">execute_query</span>(<span class="str">"SELECT COUNT(*) as count FROM students"</span>)[<span class="num">0</span>][<span class="str">'count'</span>]
+    avg_gpa = <span class="fn">execute_query</span>(<span class="str">"SELECT AVG(gpa) as avg FROM students"</span>)[<span class="num">0</span>][<span class="str">'avg'</span>]
+    top     = <span class="fn">execute_query</span>(<span class="str">"SELECT name,student_id,gpa FROM students ORDER BY gpa DESC LIMIT 3"</span>)
+    <span class="kw">return</span> jsonify({<span class="str">"status"</span>: <span class="str">"success"</span>, <span class="str">"data"</span>: {<span class="str">"total_students"</span>: total, <span class="str">"average_gpa"</span>: <span class="nb">round</span>(<span class="nb">float</span>(avg_gpa <span class="kw">or</span> <span class="num">0</span>), <span class="num">2</span>), <span class="str">"top_students"</span>: top}})
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    app.<span class="fn">run</span>(host=<span class="str">'0.0.0.0'</span>, port=<span class="num">5000</span>, debug=<span class="nb">False</span>)
+APPEOF</code></pre>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-family:var(--font-en);margin:20px 0 12px">ขั้นตอนที่ 5: Restart และทดสอบ</p>
+    <div class="code-wrap">
+      <div class="code-header bash"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>Restart Service และทดสอบ API</span><span>Bash</span></div>
+      <pre><code>sudo systemctl restart student-app
+
+<span class="bash-cm"># ตรวจสอบ database connection</span>
+curl http://localhost:5000/health
+
+<span class="bash-cm"># ดึงนักศึกษาทั้งหมด</span>
+curl http://localhost:5000/students
+
+<span class="bash-cm"># ดูสถิติ</span>
+curl http://localhost:5000/stats
+
+<span class="bash-cm"># เพิ่มนักศึกษา (บันทึกลง RDS จริง!)</span>
+curl -X POST http://localhost:5000/students \
+  -H <span class="bash-str">"Content-Type: application/json"</span> \
+  -d <span class="bash-str">'{"student_id":"6401004","name":"วิไล มีแววดี","email":"vilai@example.com","faculty":"ICT","major":"Cloud Technology","gpa":3.75,"enrollment_year":2564}'</span></code></pre>
+    </div>
+
+    <div style="margin-top:16px">
+      <p style="color:var(--muted);font-size:0.85rem;font-weight:600;margin-bottom:8px">Endpoints ที่มีทั้งหมด:</p>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="endpoint get"><span class="method-badge">GET</span> /students — ดึงนักศึกษาทั้งหมด (รองรับ ?faculty=ICT &amp;min_gpa=3.5)</div>
+        <div class="endpoint get"><span class="method-badge">GET</span> /students/{id} — ดึงนักศึกษาตาม ID</div>
+        <div class="endpoint post"><span class="method-badge">POST</span> /students — เพิ่มนักศึกษาใหม่</div>
+        <div class="endpoint put"><span class="method-badge">PUT</span> /students/{id} — แก้ไขนักศึกษา</div>
+        <div class="endpoint delete"><span class="method-badge">DELETE</span> /students/{id} — ลบนักศึกษา</div>
+        <div class="endpoint get"><span class="method-badge">GET</span> /stats — สถิติ GPA เฉลี่ย / Top 3</div>
+        <div class="endpoint get"><span class="method-badge">GET</span> /health — ตรวจสอบ DB connection</div>
+      </div>
+    </div>
+    <div class="success-marker" style="margin-top:12px">✅ Flask เชื่อมต่อ RDS MySQL แล้ว — ข้อมูลบันทึกถาวร ไม่หายเมื่อ restart</div>
+  </div>
+</section>
+
+<!-- EXERCISES W2 -->
+<section id="ex2" class="lab-section">
+  <div class="lab-header w2"><div class="lab-icon w2">📝</div><div><div class="lab-number w2">แบบฝึกหัด</div><div class="lab-title">Week 2</div></div></div>
+  <div class="lab-body w2">
+    <div class="exercise-card">
+      <div><span class="exercise-num w2">1</span><span class="exercise-title">Enrollment System</span></div>
+      <div class="exercise-body">
+        <p>เขียน Endpoints เพิ่มเติมสำหรับ ตาราง <code style="color:var(--w2h)">enrollments</code>:</p>
+        <div class="code-wrap" style="margin-top:10px">
+          <div class="code-header python"><span><div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div></span><span>TODO: เพิ่มใน app.py</span><span>Python</span></div>
+          <pre><code><span class="cm"># 1. POST /enrollments — ลงทะเบียนนักศึกษาในวิชา</span>
+<span class="cm"># 2. GET /students/&lt;id&gt;/courses — ดูวิชาที่นักศึกษาลงทะเบียน</span>
+<span class="cm"># 3. GET /courses/&lt;id&gt;/students — ดูนักศึกษาในวิชา</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="exercise-card">
+      <div><span class="exercise-num w2">2</span><span class="exercise-title">RDS Snapshot</span></div>
+      <div class="exercise-body">
+        <ul style="padding-left:16px">
+          <li>RDS → Databases → <strong style="color:white">ict24267-db</strong></li>
+          <li>Actions → <strong style="color:white">Take snapshot</strong></li>
+          <li>Snapshot identifier: <code style="color:var(--w2h)">ict24267-db-week2-backup</code></li>
+          <li>ตรวจสอบ snapshot ที่ RDS → Snapshots</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUESTIONS W2 -->
+<section id="q2" class="lab-section">
+  <div class="lab-header w2"><div class="lab-icon w2">🗒️</div><div><div class="lab-number w2">คำถามท้ายบท</div><div class="lab-title">Week 2 (5 ข้อ)</div></div></div>
+  <div class="lab-body w2">
+    <div class="question-item"><div class="q-num w2">1</div><div class="q-text"><span class="q-keyword">RDS vs MySQL บน EC2: </span>อธิบายข้อดีของการใช้ RDS Managed Service เปรียบเทียบกับการติดตั้ง MySQL บน EC2 เองอย่างน้อย 3 ข้อ</div></div>
+    <div class="question-item"><div class="q-num w2">2</div><div class="q-text"><span class="q-keyword">Security Best Practice: </span>ทำไมถึงตั้งค่า <code>Public access: No</code> สำหรับ RDS แล้วให้ EC2 เป็น gateway แทน? มีความเสี่ยงอะไรถ้าเปิด Public access?</div></div>
+    <div class="question-item"><div class="q-num w2">3</div><div class="q-text"><span class="q-keyword">Connection Pooling: </span>ถ้า Application มีผู้ใช้พร้อมกัน 1,000 คน และแต่ละ request สร้าง connection ใหม่ทุกครั้ง จะเกิดปัญหาอะไร? และ Connection Pool แก้ปัญหาได้อย่างไร?</div></div>
+    <div class="question-item"><div class="q-num w2">4</div><div class="q-text"><span class="q-keyword">Database Backup: </span>AWS RDS มีกลยุทธ์ backup กี่แบบ? แต่ละแบบต่างกันอย่างไร?</div></div>
+    <div class="question-item"><div class="q-num w2">5</div><div class="q-text"><span class="q-keyword">SQL Injection: </span>จากโค้ด <code>database.py</code> ทำไมการใช้ Parameterized Query (<code>%s</code>) ถึงปลอดภัยกว่า String Formatting?</div></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+function goTo(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
+const w2start=document.getElementById('week2');
+const t1=document.getElementById('tab-w1');
+const t2=document.getElementById('tab-w2');
+window.addEventListener('scroll',()=>{
+  const r=w2start.getBoundingClientRect();
+  if(r.top<window.innerHeight/2){t1.classList.remove('active-w1');t2.classList.add('active-w2')}
+  else{t1.classList.add('active-w1');t2.classList.remove('active-w2')}
+});
+</script>
+</body>
+</html>
